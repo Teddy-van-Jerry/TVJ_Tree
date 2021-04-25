@@ -6,6 +6,9 @@
  * @licence: The MIT Licence
  * @compiler: at least C++/11 (tested on MSVC and MinGW)
  *
+ * @version 1.3 2021/04/25
+ * - add function delete_vectors_with_same_content_pointers
+ * 
  * @version 1.2 2021/04/05
  * - bug fix
  * - change capacity_ to protected
@@ -24,6 +27,7 @@
 
 #include <stdexcept>
 #include <exception>
+#include <iterator>
 #ifdef _MSC_VER
 #include <xutility> // std::_Is_iterator
 #endif // for MSVC
@@ -129,6 +133,9 @@ namespace tvj
     template<typename Elem>
     class vector
     {
+        template<typename T>
+        friend void delete_vectors_with_same_content_pointers(size_t size, T array_of_vectors);
+
     protected:
         class const_iterator
         {
@@ -446,6 +453,7 @@ namespace tvj
          * return: iterator
          */
         auto _medium(const iterator& a, const iterator& b, const iterator& c);
+
     };
 
     template<typename Elem>
@@ -802,6 +810,7 @@ namespace tvj
     vector<Elem>::~vector() // destructor
     {
         if(vec) delete[] vec; // free the dynamic array
+        vec = nullptr;
     }
 
     template<typename Elem>
@@ -1097,6 +1106,24 @@ namespace tvj
     //	}
     //	return merged;
     //}
+
+    /**
+     * brief: delete vectors with same content pointers,
+     *        otherwise it can delete on the same pointer and leads to errors
+     * param: array or container of [pointers to vectors]
+     * return: void
+     */
+    template<typename T>
+    void delete_vectors_with_same_content_pointers(size_t size, T array_of_vectors)
+    {
+        if (size < 1) return;
+        auto delete_later__ = *array_of_vectors[0];
+        for (size_t i = 0; i != size; i++)
+        {
+            array_of_vectors[i]->vec = nullptr; // avoid being deleted
+        }
+        // delete_later__ will be deleted implicitly later
+    }
 }
 
 // ALL RIGHTS RESERVED (C) 2021 Teddy van Jerry
