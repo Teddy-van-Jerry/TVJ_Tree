@@ -1,0 +1,86 @@
+Help
+
+1. Start the Fractal Designer
+
+If you want to create images and videos, click on the log in button on the right of the tool bar. There is also a search function in the tool bar.
+
+Available Username (Passcode): CSDN (Southeast61), GitHub (Southeast61), SEU (SEU615205).
+
+You can either build a new project (, Ctrl + N) or open a project (, Ctrl + O) built previously. Fractal Designer project is a file with the suffix .frd and can be run directly by double clicking it. (But the Fractal Designer has to be run at least once on your PC to make it valid.)
+
+There is a sample project in the programme folder named Sample. Choose open project and you can see the parameters defined there.
+
+2. Prepare for creating images
+
+Before you set out to click the green create image button, you have to set parameters which are critical to the project.
+
+First, choose the template.
+This version provides Mandelbrot Set (Template 1), Julia Set (Template 2), Burning Ship Fractal (Template 3) and Generalized Newton Fractal (Template 4). If you choose Template 2/4, you need to set additional information in Template -> Additional template settings -> Template 2/4.
+
+Second, define the value in terms of the iteration calculation. You can use the default value by clicking on the button Default. In template 1, 2 and 3, if the iterated point has the modulus greater than Maximum unclassified value, we conclude it as unconvergent point, else if it is less than Minimum unclassified value, we conclude it as convergent point, otherwise, the iteration keeps going until it reaches the Iteration limit. If it still can not be concluded, it is classified into unconvergent points. In Template 4, if the iterated point has the modulus greater than Maximum unclassified value, we conclude it as unconvergent point, else if it is close to the root limit (the extent of being close is set by Solution accuracy, which is normally a very small positive number), it is classified into unconvergent points. If it still can not be concluded, it is classified into unconvergent points.
+
+Third, define colours, click the Customize button and you can define the RGB value of both convergent points and unconvergent points. There are four channels, Red, Green, Blue, Alpha (Note that the video form mp4 DO NOT support the alpha channel and define alpha to 255 as Opaque, 0 as Transparent.) The t here is a parameter indicating the time with the range of 0 to 1. (Tip: In Template 4, Zn.X and Zn.Y should be major parameters as they are related to the roots of the formula.)
+
+Fourth, define the route information. Click the Add and Remove or Clear button to edit. Click the Uniform Motion button to change t automatically to match the coordinates you have defined so the movement will be in a uniform motion.
+t      time (0 to 1)
+x      centre coordinate X
+y      centre coordinate Y
+angle  the rotating angle (The positive direction is counterclockwise.)
+width  the width of the image
+v rate a value indicating the change of speed. (Normally, it is between -1 to 1. A positive value means slow to fast and vice versa.)
+
+Tips:
+1. The invalid setting of t or width will be marked in the colour red.
+2. Remove button will only remove the last row.
+3. You can click on the table header to sort the table content.
+4. Use the sorting function well so you can add and remove rows easily.
+5. You can use the Route Tool (, Ctrl + T) which has the icon of a hammer to assist you. You can drag the image to move, and use the wheel to change the size of the image (the centre point remains the same and this needs additional click of the View button). Double click to set this point as the the centre point (this needs additional click of the View button). Clicking the Save Point (, Strl + S) to add Route Tool information to the main window Route Info table. Besides, you can set the relationship between Size and Width.
+
+Please note that in this version (v 5.5), the v rate only supports angle.
+
+Fifth, define other information related to the project.
+
+Remember to save (Ctrl + S) the information you have defined.
+
+Having done that, you can refresh (, Ctrl + F5) to preview your work. Dragging the slider, you can view colours at different t value. You can also set Auto Refresh in the Menu Image which enables the automatic refresh after t changes.
+
+3. Create images
+
+Before creating images, you have to save the project first.
+Click on the green triangle (, Ctrl + B), start creating images. Default setting will run CPU to 100%, if you want to change that, use Thread Control in Menu Image.
+
+The red Stop button (, Ctrl + .) can stop the creating thread immediately. The thread can not be resumed, but you can use Creating Images in Range (, Ctrl + Shift + B) to specify the range of images.
+
+This process can be time-consuming.
+
+4. Create video
+
+Creating Video is based on FFmpeg. If you have not installed FFmpeg, find the FFmpeg option in Menu Video of the main window.
+
+Define the video file name and the path. Click on the blue triangle (, Ctrl + B), and if it works well, it will be finished within several minutes and possibly several seconds. But do be patient as the main window can not be clicked during creating the video.
+Sometimes the failure of creating video is due to the execution policy of PowerShell oe Shell on your PC, you can run the PowerShell file Create_Video.ps1/sh and Add_Music.ps1/sh which are in the video folder according to instructions given when failure occurs.
+
+Caution: The path you choose to create the video should avoid files like '1.mp3', '2.mp3', ... and 'BGM.mp3' as they are temporary files during creating videos.
+
+5. Other information
+
+1.  Be careful with the compatibility mode, and any careless actions can lead to the crash of it. It is advised not to use that. The compatibility mode does not support Linux platform.
+2.  To report bugs, click on the Report Bug option in Menu Help.
+3.  Choose the option Check for updates or follow Teddy-van-Jerry in GitHub or Teddy van Jerry in CSDN to check for updates.
+4.  This help has the shortcut Ctrl + H, to view the Chinese version, you can use Ctrl + Shift + H.
+5.  Fractal Designer provides online video samples in the Menu Help.
+6.  New Features is also available to be checked in the Menu More of the Help window.
+7.  Use the searching function well and it supports Chinese searching.
+8.  All the editings can call the Undo (, Ctrl + X) and Redo (, Ctrl + Y) and supports memories up to 50 actions. (except the Compatibility Module.)
+9.  Check Images () can check if there are missed images and you can choose to recreate those.
+10. Delete Images () can delete images already created.
+11. Be careful that finishing editing a line or a combo box (i.e. the focus is removed) can the information be recognized or saved.
+12. To close a project (), Ctrl + W. To exit the application (), Ctrl + E.
+13. Fractal Designer 5.5 is licenced under The MIT Licence. (C) 2021 Teddy van Jerry
+
+Fractal Designer - Version 5.5.3 - 2021/04/13
+
+*           *           *           *           *
+This is Help from Teddy van Jerry's Qt Programme,
+https://github.com/Teddy-van-Jerry/Fractal_Designer,
+You are welcome to pull a request!

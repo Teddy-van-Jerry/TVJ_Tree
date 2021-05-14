@@ -6,6 +6,9 @@
  * @licence: The MIT Licence
  * @compiler: at least C++/11 (tested on MSVC and MinGW)
  *
+ * @version 1.4 2021/05/14
+ * - add function no_delete
+ * 
  * @version 1.3 2021/04/25
  * - add function delete_vectors_with_same_content_pointers
  * 
@@ -38,6 +41,12 @@ namespace tvj
 #define ASCENDING  true
 #define DESCENDING false
 
+#ifndef error_info
+#define error_info(_text__, _exception__) \
+_error_info(_text__, _exception__, __FILE__, __LINE__);
+#endif // !error_info
+
+
 #pragma warning(disable: 4018) // signed/unsigned mismatch
 #pragma warning(disable: 4172) // returning address of local variable or temporary
 #pragma warning(disable: 4244) // convertion possible loss of data
@@ -50,7 +59,8 @@ namespace tvj
         TVJ_VECTOR_OVERFLOW,
         TVJ_VECTOR_TYPE_MISMATCH,
         TVJ_VECTOR_NULLPTR,
-        TVJ_VECTOR_ITER_RANGE
+        TVJ_VECTOR_ITER_RANGE,
+        TVJ_VECTOR_OTHER
     };
 
     /**
@@ -59,8 +69,12 @@ namespace tvj
      * return: void
      * @warning disabled: 26812
      */
-    inline void error_info(const char* text, const TVJ_VECTOR_EXCEPTION& exception_code)
+    inline void _error_info(const char* text, const TVJ_VECTOR_EXCEPTION& exception_code, const char* file_name = nullptr, int line = 0)
     {
+        std::cerr << "\n==================================================================="
+            << "\nEXCEPTION at file " << file_name << " in line " << line
+            << "\n-> " << text
+            << "\n===================================================================" << std::endl;
         switch (exception_code)
         {
         case TVJ_VECTOR_UNDERFLOW:
@@ -111,7 +125,7 @@ namespace tvj
      * return: bool
      */
     template<typename T>
-    inline bool _compare(const T& a, const T& b, bool is_ascending = ASCENDING)
+    inline bool _compare(const T& a, const T& b, bool is_ascending)
     {
         if (a == b) return true;
         return ((a > b) ^ is_ascending);
@@ -367,6 +381,27 @@ namespace tvj
         void sort(bool is_ascending = ASCENDING);
 
         /**
+         * brief: insertion sort
+         * param: bool (ASCENDING or DESCENDING, default as ASCENDING)
+         * return: void
+         */
+        void insertion_sort(bool is_ascending = ASCENDING);
+
+        /**
+         * brief: find
+         * param: the element
+         * return: the index of its first occurence
+         */
+        size_t find(const Elem& elem) const noexcept;
+
+        /**
+         * brief: find in a sorted vector
+         * param: the element
+         * return: the index of its first occurence
+         */
+        size_t search(const Elem& elem, bool is_ascending = ASCENDING) const noexcept;
+
+        /**
          * brief: the read-only version of the element
          * param: size_t index
          * return: void
@@ -408,6 +443,17 @@ namespace tvj
          */
         bool operator!=(const vector<Elem>& vec) const noexcept;
 
+        /**
+         * ================== CAUTION ==================
+         * This function should be used very carefully!
+         * =============================================
+         * brief: no delete,
+         *        used especially when delete meets access violation
+         * param: void
+         * return: void
+         */
+        void no_delete();
+
     private:
         // the dynamic array that stores elements
         Elem* vec;
@@ -445,7 +491,7 @@ namespace tvj
          * param: the begin iterator and the end iterator and order
          * return: void
          */
-        void _insertion_sort(iterator& i_beg, iterator& i_end, bool is_ascending = ASCENDING);
+        void _insertion_sort(iterator i_beg, iterator i_end, bool is_ascending = ASCENDING);
 
         /**
          * brief: medium
@@ -928,6 +974,54 @@ namespace tvj
     }
 
     template<typename Elem>
+    inline void vector<Elem>::insertion_sort(bool is_ascending)
+    {
+        if (size_ < 2) return;
+        _insertion_sort(begin(), end(), is_ascending);
+    }
+
+    template<typename Elem>
+    inline size_t vector<Elem>::find(const Elem& elem) const noexcept
+    {
+        for (size_t i = 0; i != this->size_; i++)
+        {
+            if (vec[i] == elem) return i;
+        }
+        return this->size_;
+    }
+
+    template<typename Elem>
+    inline size_t vector<Elem>::search(const Elem& elem, bool is_ascending) const noexcept
+    {
+        if (size_ == 0) return 0;
+
+#ifndef NDEBUG
+        // If the vector is not sorted
+        if (!sorted(is_ascending))
+        {
+            error_info("Use search function in an unsorted tvj::vector. Try using function find.", TVJ_VECTOR_OTHER);
+        }
+#endif
+
+        size_t L = 0; size_t R = size_;
+        while (1)
+        {
+            if (R >= L) return size_;
+            if (vec[(R + L) / 2] == elem) return (R + L) / 2;
+            if ((vec[(R + L) / 2] > elem) ^ is_ascending)
+            {
+                // left part
+                R = (R + L) / 2;
+            }
+            else
+            {
+                // right part
+                L = (R + L) / 2 + 1;
+            }
+        }
+    }
+
+    template<typename Elem>
     inline const Elem& vector<Elem>::at(size_t index) const
     {
 #ifndef NDEBUG
@@ -978,6 +1072,12 @@ namespace tvj
     inline bool vector<Elem>::operator!=(const vector<Elem>& another_vec) const noexcept
     {
         return !(*this == another_vec);
+    }
+
+    template<typename Elem>
+    inline void vector<Elem>::no_delete()
+    {
+        vec = nullptr;
     }
 
     template<typename Elem>
@@ -1055,14 +1155,14 @@ namespace tvj
     }
 
     template<typename Elem>
-    inline void vector<Elem>::_insertion_sort(iterator& i_beg, iterator& i_end, bool is_ascending)
+    inline void vector<Elem>::_insertion_sort(iterator i_beg, iterator i_end, bool is_ascending)
     {
         for (iterator i = i_beg + 1; i != i_end; i++)
         {
             auto temp = *i;
             // slide elements right to make room for v[i]
             auto j = i;
-            while (j >= i_beg + 1 && *(j - 1) > temp)
+            while (j >= i_beg + 1 && !_compare(*(j - 1), temp, is_ascending))
             {
                 *(j--) = *(j - 1);
             }

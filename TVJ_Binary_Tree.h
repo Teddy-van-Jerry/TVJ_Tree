@@ -7,6 +7,9 @@
  * @compiler: at least C++/11 (tested on MSVC)
  * @reliance: TVJ_Vector.h 1.3, TVJ_Stack.h 1.0
  *
+ * @version 1.2 2021/05/13
+ * - adapted for huffman tree
+ * 
  * @version 1.1 2021/04/25
  * - provide preorder_iterator and postorder_iterator
  * 
@@ -46,13 +49,14 @@ namespace tvj
 			BT_Node(BT_Node* parent, Elem data, BT_Node* LChild = nullptr, BT_Node* RChild = nullptr);
 			Elem data_;
 			BT_Node* parent_, * L_child_, * R_child_;
+			int weitht_ = 0;
 		};
 
 		static vector<BT_Node*> empty_vector_for_sequence_init___;
 
 		using BT_ptr = binary_tree*;
 
-	private:
+	// private:
 		BT_Node root_parent_;
 		// BT_Node R_end_ = &root_parent_;
 		size_t size_ = 0;
@@ -136,6 +140,8 @@ namespace tvj
 			bool is_parent() const noexcept;
 			bool is_left_child() const noexcept;
 			bool is_right_child() const noexcept;
+			bool has_left_child() const noexcept;
+			bool has_right_child() const noexcept;
 
 			inorder_const_iterator parent() const;
 			inorder_const_iterator left_child() const;
@@ -998,21 +1004,33 @@ namespace tvj
 	}
 
 	template<typename Elem>
+	inline bool binary_tree<Elem>::inorder_const_iterator::has_left_child() const noexcept
+	{
+		return this->sequence_[this->index_]->L_child_ != nullptr;
+	}
+
+	template<typename Elem>
+	inline bool binary_tree<Elem>::inorder_const_iterator::has_right_child() const noexcept
+	{
+		return this->sequence_[this->index_]->R_child_ != nullptr;
+	}
+
+	template<typename Elem>
 	inline typename binary_tree<Elem>::inorder_const_iterator binary_tree<Elem>::inorder_const_iterator::parent() const
 	{
-		return inorder_const_iterator(this->sequence_in_[this->index_]->parent);
+		return inorder_const_iterator(this->parent_tree_, (*this->sequence_ptr_)[this->index_]->parent);
 	}
 
 	template<typename Elem>
 	inline typename binary_tree<Elem>::inorder_const_iterator binary_tree<Elem>::inorder_const_iterator::left_child() const
 	{
-		return inorder_const_iterator(this->sequence_in_[this->index_]->L_child_);
+		return inorder_const_iterator(this->parent_tree_, (*this->sequence_ptr_)[this->index_]->L_child_);
 	}
 
 	template<typename Elem>
 	inline typename binary_tree<Elem>::inorder_const_iterator binary_tree<Elem>::inorder_const_iterator::right_child() const
 	{
-		return inorder_const_iterator(this->sequence_in_[this->index_]->R_child_);
+		return inorder_const_iterator(this->parent_tree_, (*this->sequence_ptr_)[this->index_]->R_child_);
 	}
 
 	template<typename Elem>
