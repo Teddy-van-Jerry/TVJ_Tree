@@ -7,6 +7,9 @@
  * @licence: The MIT Licence
  * @compiler: at least C++/11 (tested on MSVC)
  *
+ * @version 1.3 2021/05/27
+ * - sample for AVL tree
+ * 
  * @version 1.2 2021/05/14
  * - sample for huffman coding
  * 
@@ -20,6 +23,7 @@
 #include "TVJ_Binary_Tree.h"
 #include "TVJ_Huffman_Tree.h"
 #include "TVJ_Huffman_Coding.h"
+#include "TVJ_AVL_Tree.h"
 using namespace tvj;
 
 // using iterator to print the tree by in-order
@@ -89,6 +93,9 @@ int main()
 	binary_tree<int> sub_tree(BT.root().left_child());
 
 	std::cout << "Sub-tree:   "; print_BT(sub_tree);
+
+	BT.remove_at(1);
+	std::cout << "Remove [1]: "; print_BT(BT);
 	
 	vector<weighted_info<char>> vec_weighted_info;
 	weighted_info<char> info;
@@ -129,6 +136,25 @@ int main()
 	hf_coding.decode_to_file("Encode.txt", HF_FILE, "Decode.txt");
 
 	std::cout << decoded_string << std::endl;
+
+	std::cout << "---------------------------------------------" << std::endl;
+
+	AVL_tree<double> avlT;
+
+	avlT.insert(1)
+		.insert(0.5)
+		.insert(1.5)
+		.insert(23.1)
+		.insert(-2)
+		.insert(0)
+		.insert(1)
+		.insert(12);
+	print_BT(avlT);
+
+	avlT.remove(0);
+	print_BT(avlT);
+	avlT.remove(1);
+	print_BT(avlT);
 
 	return 0;
 }

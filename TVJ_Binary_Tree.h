@@ -5,8 +5,13 @@
  * @author: Teddy van Jerry
  * @licence: The MIT Licence
  * @compiler: at least C++/11 (tested on MSVC)
- * @reliance: TVJ_Vector.h 1.3, TVJ_Stack.h 1.0
+ * @reliance: TVJ_Vector.h 1.4, TVJ_Stack.h 1.0
  *
+ * @version 1.3 2021/05/27
+ * - cater for AVL trees
+ * - add function remove_at
+ * - add functions declared before
+ * 
  * @version 1.2 2021/05/13
  * - adapted for huffman tree
  * 
@@ -37,6 +42,8 @@ namespace tvj
 
 #define sequence_ _sequence_ptr_to_ref()
 #define cthis const_cast<const BT_ptr>(this)
+
+	constexpr size_t negative_1 = static_cast<size_t>(0) - 1;
 
 	template<typename Elem>
 	class binary_tree
@@ -140,8 +147,11 @@ namespace tvj
 			bool is_parent() const noexcept;
 			bool is_left_child() const noexcept;
 			bool is_right_child() const noexcept;
+			bool is_before_begin() const noexcept;
 			bool has_left_child() const noexcept;
 			bool has_right_child() const noexcept;
+
+			size_t degree() const noexcept;
 
 			inorder_const_iterator parent() const;
 			inorder_const_iterator left_child() const;
@@ -174,6 +184,7 @@ namespace tvj
 			friend typename binary_tree<Elem>::postorder_iterator binary_tree<Elem>::postorder_root() noexcept;
 			friend typename binary_tree<Elem>::postorder_iterator binary_tree<Elem>::postorder_begin() noexcept;
 			friend typename binary_tree<Elem>::postorder_iterator binary_tree<Elem>::postorder_end() noexcept;
+			friend void binary_tree<Elem>::_remove_node(BT_Node*);
 
 		public:
 			// constructor
@@ -191,7 +202,7 @@ namespace tvj
 			Elem* operator->();
 			inorder_iterator operator+(long long n); // move right
 			inorder_iterator operator-(long long n); // move left
-			// auto operator- (const inorder_iterator& iter) const noexcept; // distance
+			long long operator- (const inorder_iterator& iter) const noexcept; // distance
 			// bool operator==(const inorder_iterator& iter) const noexcept;
 			// bool operator!=(const inorder_iterator& iter) const noexcept;
 			// bool operator< (const inorder_iterator& iter) const noexcept;
@@ -283,14 +294,36 @@ namespace tvj
 
 		~binary_tree();
 
-	private:
+	protected:
 		BT_Node* _get_iter_node(const const_iterator& iter) const;
 
+	private:
 		void _set_subtree(const BT_Node* original_node, BT_Node* this_node);
 
 	public:
 
 		size_t size() const noexcept;
+
+		const Elem& at(size_t index) const;
+		const Elem& inorder_at(size_t index) const;
+		const Elem& preorder_at(size_t index) const;
+		const Elem& postorder_at(size_t index) const;
+		const Elem& operator[](size_t index) const;
+
+		Elem& at(size_t index);
+		Elem& inorder_at(size_t index);
+		Elem& preorder_at(size_t index);
+		Elem& postorder_at(size_t index);
+		Elem& operator[](size_t index);
+
+	protected:
+		void _remove_node(BT_Node* node);
+
+	public:
+		void remove_at(size_t index);
+		void remove_inorder_at(size_t index);
+		void remove_preorder_at(size_t index);
+		void remove_postorder_at(size_t index);
 
 		// @inorder_iterator
 		inorder_const_iterator inorder_croot() const noexcept;
@@ -505,6 +538,129 @@ namespace tvj
 	inline size_t binary_tree<Elem>::size() const noexcept
 	{
 		return this->size_;
+	}
+
+	template<typename Elem>
+	inline const Elem& binary_tree<Elem>::at(size_t index) const
+	{
+		return this->inorder_at(index);
+	}
+
+	template<typename Elem>
+	inline const Elem& binary_tree<Elem>::inorder_at(size_t index) const
+	{
+		return this->sequence_in_[index];
+	}
+
+	template<typename Elem>
+	inline const Elem& binary_tree<Elem>::preorder_at(size_t index) const
+	{
+		return this->sequence_pre_[index];
+	}
+
+	template<typename Elem>
+	inline const Elem& binary_tree<Elem>::postorder_at(size_t index) const
+	{
+		return this->sequence_post_[index];
+	}
+
+	template<typename Elem>
+	inline const Elem& binary_tree<Elem>::operator[](size_t index) const
+	{
+		return this->at(index);
+	}
+
+	template<typename Elem>
+	inline Elem& binary_tree<Elem>::at(size_t index)
+	{
+		return this->inorder_at(index);
+	}
+
+	template<typename Elem>
+	inline Elem& binary_tree<Elem>::inorder_at(size_t index)
+	{
+		return this->sequence_in_[index];
+	}
+
+	template<typename Elem>
+	inline Elem& binary_tree<Elem>::preorder_at(size_t index)
+	{
+		return this->sequence_pre_[index];
+	}
+
+	template<typename Elem>
+	inline Elem& binary_tree<Elem>::postorder_at(size_t index)
+	{
+		return this->sequence_post_[index];
+	}
+
+	template<typename Elem>
+	inline Elem& binary_tree<Elem>::operator[](size_t index)
+	{
+		return this->at(index);
+	}
+
+	template<typename Elem>
+	inline void binary_tree<Elem>::_remove_node(BT_Node* node)
+	{
+		iterator iter__(this, node);
+		if (iter__.degree() == 0)
+		{
+			if (iter__.is_left_child())
+			{
+				node->parent_->L_child_ = nullptr;
+			}
+			else
+			{
+				node->parent_->R_child_ = nullptr;
+			}			
+		}
+		else if (iter__.degree() == 1)
+		{
+			if (iter__.has_left_child())
+			{
+				if (iter__.is_left_child())
+				{
+					node->parent_->L_child_ = node->L_child_;
+				}
+				else
+				{
+					node->parent_->R_child_ = node->L_child_;
+				}
+			}
+			else
+			{
+				if (iter__.is_left_child())
+				{
+					node->parent_->L_child_ = node->R_child_;
+				}
+				else
+				{
+					node->parent_->R_child_ = node->R_child_;
+				}
+			}
+		}
+		else
+		{
+			auto previous_iter__ = iter__ - 1;
+			*iter__ = *previous_iter__;
+			node->R_child_ = this->_get_iter_node(previous_iter__)->L_child_;
+			this->_get_iter_node(previous_iter__)->parent_->R_child_ = nullptr;
+		}
+	}
+
+	template<typename Elem>
+	inline void binary_tree<Elem>::remove_at(size_t index)
+	{
+		remove_inorder_at(index);
+	}
+
+	template<typename Elem>
+	inline void binary_tree<Elem>::remove_inorder_at(size_t index)
+	{
+		_remove_node(sequence_in_[index]);
+		sequence_in_.remove_at(index);
+		this->size_--;
 	}
 
 	//////// inorder_iterator ////////
@@ -833,7 +989,7 @@ namespace tvj
 		size_t index__ = _find_node_index(node);
 		if (index__ >= this->sequence_.size())
 		{
-			exit(10000 + this->sequence_.size());
+			exit(10000 + this->sequence_.size()); // impossible
 		}
 		else
 		{
@@ -1004,6 +1160,12 @@ namespace tvj
 	}
 
 	template<typename Elem>
+	inline bool binary_tree<Elem>::inorder_const_iterator::is_before_begin() const noexcept
+	{
+		return this->index_ == negative_1;
+	}
+
+	template<typename Elem>
 	inline bool binary_tree<Elem>::inorder_const_iterator::has_left_child() const noexcept
 	{
 		return this->sequence_[this->index_]->L_child_ != nullptr;
@@ -1013,6 +1175,12 @@ namespace tvj
 	inline bool binary_tree<Elem>::inorder_const_iterator::has_right_child() const noexcept
 	{
 		return this->sequence_[this->index_]->R_child_ != nullptr;
+	}
+
+	template<typename Elem>
+	inline size_t binary_tree<Elem>::inorder_const_iterator::degree() const noexcept
+	{
+		return has_left_child() + has_right_child();
 	}
 
 	template<typename Elem>
@@ -1233,9 +1401,27 @@ namespace tvj
 	}
 
 	template<typename Elem>
+	inline typename binary_tree<Elem>::inorder_iterator binary_tree<Elem>::inorder_iterator::operator+(long long n)
+	{
+		return inorder_iterator(this->parent_tree_, static_cast<size_t>(static_cast<long long>(this->index_) + n));
+	}
+
+	template<typename Elem>
+	inline typename binary_tree<Elem>::inorder_iterator binary_tree<Elem>::inorder_iterator::operator-(long long n)
+	{
+		return inorder_iterator(this->parent_tree_, static_cast<size_t>(static_cast<long long>(this->index_) - n));
+	}
+
+	template<typename Elem>
+	inline long long binary_tree<Elem>::inorder_iterator::operator-(const inorder_iterator& iter) const noexcept
+	{
+		return static_cast<long long>(this->index_) - static_cast<long long>(iter.index_);
+	}
+
+	template<typename Elem>
 	inline auto binary_tree<Elem>::inorder_const_iterator::operator-(const inorder_const_iterator& iter) const noexcept
 	{
-		return static_cast<long long>(this->sequence_[this->index_]) - static_cast<long long>(iter.sequence_[iter.index_]);
+		return static_cast<long long>(this->index_) - static_cast<long long>(iter.index_);
 	}
 
 	template<typename Elem>
@@ -1248,6 +1434,12 @@ namespace tvj
 	inline bool binary_tree<Elem>::inorder_const_iterator::operator!=(const inorder_const_iterator& iter) const noexcept
 	{
 		return this->index_ != iter.index_ || this->sequence_ != iter.sequence_;
+	}
+
+	template<typename Elem>
+	inline bool binary_tree<Elem>::inorder_const_iterator::operator<(const inorder_const_iterator& iter) const noexcept
+	{
+		return this->index_ < iter.index_;
 	}
 
 #undef sequence_
